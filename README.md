@@ -399,6 +399,10 @@
 [Вернуться к содержанию](#content)
 
 #### <a id="logical_structure">Логическая структура базы данных</a>
+
+![image](https://github.com/user-attachments/assets/e7113232-ab6e-4f54-8afd-1ea57980d045)
+
+
 **Определение таблиц и их атрибутов**
 1. **Таблица "Тренеры"**
     - **ID_тренера** (Primary Key) - уникальный идентификатор тренера (целое число).
@@ -904,6 +908,8 @@ archive_command = 'cp %p /path/to/archive/%f'
 [Вернуться к содержанию](#content)
 
 #### <a id="physical_structure">Физическая структура базы данных</a>  
+
+![image](https://github.com/user-attachments/assets/b0c3b547-3388-4ab7-95ce-3a7aec07efc1)
 
 
 ### <a id="conclusion">Заключение</a>
