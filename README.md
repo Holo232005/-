@@ -1,4 +1,4 @@
-<p align="center">Министерство образования, науки и молодежной политики Республики Коми</p>
+![image](https://github.com/user-attachments/assets/a953820e-30a7-436c-8f33-1639a0b5310a)<p align="center">Министерство образования, науки и молодежной политики Республики Коми</p>
 
 <p align="center">ГПОУ "Сыктывкарский политехнический техникум"</p>
 
@@ -399,6 +399,10 @@
 [Вернуться к содержанию](#content)
 
 #### <a id="logical_structure">Логическая структура базы данных</a>
+
+![image](https://github.com/user-attachments/assets/96170ce2-10cb-4f61-beb9-36048f79cc6e)
+
+
 **Определение таблиц и их атрибутов**
 1. **Таблица "Тренеры"**
     - **ID_тренера** (Primary Key) - уникальный идентификатор тренера (целое число).
@@ -904,6 +908,9 @@ archive_command = 'cp %p /path/to/archive/%f'
 [Вернуться к содержанию](#content)
 
 #### <a id="physical_structure">Физическая структура базы данных</a>  
+
+![image](https://github.com/user-attachments/assets/0712ed58-9dc5-4ee6-835a-99a5daaeaecf)
+
 
 
 ### <a id="conclusion">Заключение</a>
