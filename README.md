@@ -903,6 +903,9 @@ archive_command = 'cp %p /path/to/archive/%f'
 
 [Вернуться к содержанию](#content)
 
+#### <a id="physical_structure">Физическая структура базы данных</a>  
+
+
 ### <a id="conclusion">Заключение</a>
 
 #### Обобщение результатов
