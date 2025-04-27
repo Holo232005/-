@@ -310,58 +310,110 @@ PostgreSQL использует механизм хранения данных, 
 **Создание таблиц**
 Таблицы создаются на основе физической структуры, разработанной в предыдущих разделах. Ниже приводится SQL-код для создания основных таблиц. Каждая таблица содержит первичные ключи, внешние ключи и ограничения целостности.
 
--- Создание таблицы Категории
-CREATE TABLE Категории (
-ID_категории SERIAL PRIMARY KEY,
-Название_категории VARCHAR(255) NOT NULL UNIQUE
+-- Создание таблицы Администрация
+CREATE TABLE public.administration (
+    id SERIAL PRIMARY KEY,
+    user_id INT UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
+    full_name VARCHAR(255) NOT NULL,
+    position VARCHAR(255),
+    contact_info TEXT
 );
 
--- Создание таблицы Поставщики
-CREATE TABLE Поставщики (
-ID_поставщика SERIAL PRIMARY KEY,
-Название_поставщика VARCHAR(255) NOT NULL,
-Телефон VARCHAR(20),
-Электронная_почта VARCHAR(255),
-Адрес VARCHAR(255),
-CONSTRAINT chk_телефон CHECK (Телефон ~ '^[0-9]+$')
+-- Создание таблицы Тренеры
+CREATE TABLE public.coaches (
+    id SERIAL PRIMARY KEY,
+    user_id INT UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
+    full_name VARCHAR(255) NOT NULL,
+    specialization VARCHAR(255),
+    contact_info TEXT
 );
 
--- Создание таблицы Товары
-CREATE TABLE Товары (
-ID_товара SERIAL PRIMARY KEY,
-Название VARCHAR(255) NOT NULL,
-Цена NUMERIC(10,2) NOT NULL CHECK (Цена >= 0),
-Количество_на_складе INT NOT NULL CHECK (Количество_на_складе >= 0),
-ID_категории INT REFERENCES Категории(ID_категории) ON DELETE CASCADE,
-ID_поставщика INT REFERENCES Поставщики(ID_поставщика) ON DELETE SET NULL,
-Описание TEXT
+-- Создание таблицы Соревнования
+CREATE TABLE public.competitions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    event_date TIMESTAMP NOT NULL,
+    location VARCHAR(255)
 );
 
--- Создание таблицы Клиенты
-CREATE TABLE Клиенты (
-ID_клиента SERIAL PRIMARY KEY,
-ФИО VARCHAR(255) NOT NULL,
-Телефон VARCHAR(20) CHECK (Телефон ~ '^[0-9]+$'),
-Электронная_почта VARCHAR(255),
-Адрес VARCHAR(255)
+-- Создание таблицы Инвентарь
+CREATE TABLE public.inventory (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    quantity INT NOT NULL CHECK (quantity >= 0),
+    location VARCHAR(255)
 );
 
--- Создание таблицы Продажи
-CREATE TABLE Продажи (
-ID_продажи SERIAL PRIMARY KEY,
-Дата_продажи TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ID_клиента INT REFERENCES Клиенты(ID_клиента) ON DELETE SET NULL,
-Общая_сумма NUMERIC(10,2) NOT NULL CHECK (Общая_сумма >= 0)
+-- Создание таблицы Движения_инвентаря
+CREATE TABLE public.inventory_movements (
+    id SERIAL PRIMARY KEY,
+    inventory_id INT REFERENCES public.inventory(id) ON DELETE CASCADE,
+    student_id INT REFERENCES public.students(id) ON DELETE SET NULL,
+    coach_id INT REFERENCES public.coaches(id) ON DELETE SET NULL,
+    movement_type VARCHAR(50),
+    destination VARCHAR(255),
+    movement_date VARCHAR,
+    CONSTRAINT inventory_movements_movement_type_check CHECK (movement_type = ANY (ARRAY['issued', 'returned', 'transferred']))
 );
 
--- Создание таблицы Состав_продажи
-CREATE TABLE Состав_продажи (
-ID_позиции SERIAL PRIMARY KEY,
-ID_продажи INT REFERENCES Продажи(ID_продажи) ON DELETE CASCADE,
-ID_товара INT REFERENCES Товары(ID_товара) ON DELETE CASCADE,
-Количество INT NOT NULL CHECK (Количество > 0),
-Цена NUMERIC(10,2) NOT NULL CHECK (Цена >= 0)
+-- Создание таблицы Расписание
+CREATE TABLE public.schedule (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES public.students(id) ON DELETE CASCADE,
+    coach_id INT REFERENCES public.coaches(id) ON DELETE SET NULL,
+    class_date TIMESTAMP NOT NULL,
+    location VARCHAR(255)
 );
+
+-- Создание таблицы Участники_соревнований
+CREATE TABLE public.student_competitions (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES public.students(id) ON DELETE CASCADE,
+    competition_id INT REFERENCES public.competitions(id) ON DELETE CASCADE,
+    inventory_id INT REFERENCES public.inventory(id) ON DELETE SET NULL
+);
+
+-- Создание таблицы Студенты
+CREATE TABLE public.students (
+    id SERIAL PRIMARY KEY,
+    user_id INT UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
+    full_name VARCHAR(255) NOT NULL,
+    birth_date DATE NOT NULL,
+    contact_info TEXT,
+    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_lessons INT DEFAULT 0
+);
+
+-- Создание таблицы Пользователи
+CREATE TABLE public.users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50),
+    CONSTRAINT users_role_check CHECK (role = ANY (ARRAY['coacher', 'administration', 'student']))
+);
+
+-- Создание функции для предотвращения самокоучинга
+CREATE FUNCTION public.prevent_self_coaching() RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM coaches c
+        JOIN students s ON c.user_id = s.user_id
+        WHERE c.id = NEW.coach_id AND s.id = NEW.student_id
+    ) THEN
+        RAISE EXCEPTION 'Тренер не может быть студентом для самого себя';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Создание триггера для предотвращения самокоучинга
+CREATE TRIGGER check_self_coaching
+BEFORE INSERT OR UPDATE ON public.schedule
+FOR EACH ROW
+EXECUTE FUNCTION public.prevent_self_coaching();
 
 
 #### Разработка запросов
